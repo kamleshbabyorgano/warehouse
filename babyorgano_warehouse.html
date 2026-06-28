@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>BabyOrgano Warehouse — Packing Productivity</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&family=DM+Mono&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+:root{--bg:#07090f;--s1:#0d1117;--s2:#141b24;--s3:#1c2535;--bd:#ffffff0f;--b2:#ffffff18;--ac:#3b82f6;--gr:#10b981;--ye:#f59e0b;--pk:#a855f7;--rd:#ef4444;--or:#f97316;--cy:#06b6d4;--tx:#f1f5f9;--mu:#64748b;--m2:#94a3b8;--wh:#fff}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);display:flex;flex-direction:column}
+
+/* LOADER */
+#ld{position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;transition:opacity .3s}
+#ld.hide{opacity:0;pointer-events:none}
+.ll{font-family:'Bebas Neue',sans-serif;font-size:48px;color:var(--wh);letter-spacing:4px}
+.ls{font-size:11px;color:var(--mu);letter-spacing:3px;text-transform:uppercase}
+.lb{width:200px;height:2px;background:var(--s3);border-radius:2px;overflow:hidden;margin-top:6px}
+.lf{height:100%;background:var(--ac);width:0;transition:width .4s ease}
+.lerr{color:var(--rd);font-size:12px;max-width:280px;text-align:center;line-height:1.6}
+.lret{margin-top:10px;background:var(--ac);color:#fff;border:none;border-radius:6px;padding:7px 16px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif}
+
+/* TOPBAR */
+#topbar{height:50px;background:var(--s1);border-bottom:1px solid var(--bd);display:flex;align-items:center;padding:0 14px;gap:8px;flex-shrink:0}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:3px;color:var(--wh)}
+.logo span{color:var(--ac)}
+.tr{display:flex;gap:6px;margin-left:auto;align-items:center}
+.chip{background:var(--s2);border:1px solid var(--b2);border-radius:6px;padding:4px 9px;font-size:10px;color:var(--m2);font-family:'DM Mono',monospace;display:flex;align-items:center;gap:4px}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--gr);animation:bk 2s infinite}
+.dot.red{background:var(--rd);animation:none}
+@keyframes bk{0%,100%{opacity:1}50%{opacity:.3}}
+.rb{background:var(--ac);color:#fff;border:none;border-radius:6px;padding:5px 11px;font-size:11px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:opacity .15s}
+.rb:hover{opacity:.85}
+.rb:disabled{opacity:.5;cursor:not-allowed}
+.cache-tag{font-size:9px;color:var(--ye);font-family:'DM Mono',monospace}
+
+/* MAIN */
+#mn{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.tp{display:none;overflow-y:auto;padding:12px 14px;flex:1}
+.tp.active{display:block;animation:fi .15s ease}
+@keyframes fi{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-thumb{background:var(--b2);border-radius:3px}
+
+/* BOTTOM TABS */
+#bts{height:52px;background:var(--s1);border-top:1px solid var(--bd);display:flex;align-items:stretch;flex-shrink:0}
+.tbtn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:none;background:transparent;color:var(--mu);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:9px;font-weight:500;transition:all .18s;border-top:2px solid transparent}
+.tbtn .ic{font-size:16px;line-height:1}
+.tbtn.active{color:var(--ac);border-top-color:var(--ac);background:linear-gradient(to bottom,rgba(59,130,246,.07),transparent)}
+.tbtn:hover:not(.active){color:var(--m2);background:var(--s2)}
+
+/* KPI CARDS */
+.kg{display:grid;grid-template-columns:repeat(auto-fit,minmax(105px,1fr));gap:7px;margin-bottom:10px}
+.kp{background:var(--s2);border:1px solid var(--bd);border-radius:9px;padding:10px 12px;position:relative;overflow:hidden}
+.kg2{position:absolute;top:-20px;right:-20px;width:60px;height:60px;border-radius:50%;opacity:.1;pointer-events:none}
+.kl{font-size:8px;color:var(--mu);font-weight:600;letter-spacing:.07em;text-transform:uppercase;margin-bottom:4px}
+.kv{font-family:'Bebas Neue',sans-serif;font-size:26px;line-height:1}
+.ks{font-size:8px;color:var(--mu);margin-top:2px}
+
+/* TIME FILTER */
+.tff{display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+.tfl{font-size:9px;color:var(--mu);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-right:2px}
+.tfb{background:var(--s2);border:1px solid var(--bd);border-radius:6px;padding:4px 10px;font-size:10px;color:var(--m2);cursor:pointer;transition:all .18s;font-family:'DM Sans',sans-serif;font-weight:500}
+.tfb:hover,.tfb.ac{background:var(--ac);border-color:var(--ac);color:#fff}
+
+/* GRIDS & CARDS */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+@media(max-width:540px){.g2{grid-template-columns:1fr}}
+.cd{background:var(--s2);border:1px solid var(--bd);border-radius:9px;padding:12px}
+.ct{font-size:9px;font-weight:600;color:var(--m2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:9px}
+.sh{display:flex;align-items:center;gap:6px;margin-bottom:7px;flex-wrap:wrap}
+.st{font-size:9px;font-weight:600;color:var(--wh);text-transform:uppercase;letter-spacing:.04em}
+.sl{flex:1;height:1px;background:var(--bd)}
+.sc{margin-bottom:12px}
+
+/* TABLE */
+.tw{background:var(--s2);border:1px solid var(--bd);border-radius:9px;overflow:hidden}
+table{width:100%;border-collapse:collapse}
+thead th{padding:7px 9px;font-size:8px;font-weight:600;color:var(--mu);text-transform:uppercase;letter-spacing:.06em;text-align:left;background:var(--s3);white-space:nowrap}
+tbody tr{border-top:1px solid var(--bd);transition:background .12s}
+tbody tr:hover{background:var(--s3)}
+tbody td{padding:6px 9px;font-size:10px;white-space:nowrap}
+.mn{font-family:'DM Mono',monospace;font-size:9px}
+
+/* BARS */
+.bl{display:flex;flex-direction:column;gap:6px}
+.bi{display:grid;grid-template-columns:85px 1fr 32px;align-items:center;gap:5px}
+.bn{font-size:10px;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
+.bt{background:var(--s3);border-radius:99px;height:4px;overflow:hidden}
+.bf{height:100%;border-radius:99px;transition:width .5s}
+.bnum{font-size:9px;color:var(--m2);text-align:right;font-family:'DM Mono',monospace}
+
+/* PACKER GRID */
+.pg{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:7px;margin-bottom:9px}
+.pc{background:var(--s2);border:1px solid var(--bd);border-radius:8px;padding:9px;transition:all .18s;cursor:pointer}
+.pc:hover{border-color:var(--ac);transform:translateY(-1px)}
+.pc.sel{border-color:var(--ac);background:var(--s3)}
+.pav{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:12px;margin-bottom:5px}
+.pn{font-size:10px;font-weight:600;color:var(--wh);margin-bottom:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pnum{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--ac);line-height:1}
+.ppc{font-size:8px;color:var(--mu);margin-top:1px}
+.pb{height:2px;background:var(--s3);border-radius:2px;margin-top:5px;overflow:hidden}
+.pbf{height:100%;border-radius:2px}
+
+/* HEATMAP */
+.hw{overflow-x:auto}
+.ht{border-collapse:collapse;font-size:9px;white-space:nowrap}
+.ht th{padding:4px 6px;color:var(--mu);font-weight:600;text-align:center;background:var(--s3);border:1px solid var(--bd);font-size:8px}
+.ht td{padding:4px 6px;text-align:center;border:1px solid var(--bd);color:var(--m2);font-size:9px}
+.ht .rh{text-align:left;color:var(--ye);font-weight:600;background:var(--s3);padding-left:8px}
+.h0{background:var(--s2)}.h1{background:rgba(59,130,246,.12)}.h2{background:rgba(59,130,246,.28);color:#93c5fd!important}.h3{background:rgba(59,130,246,.48);color:#bfdbfe!important}.h4{background:rgba(59,130,246,.70);color:#fff!important}
+
+/* CHARTS */
+.tchart{display:flex;align-items:flex-end;gap:2px;height:70px;padding:0 2px}
+.tbar{display:flex;flex-direction:column;align-items:center;flex:1}
+.tbarv{flex:1;display:flex;align-items:flex-end;width:100%}
+.tbarb{width:100%;border-radius:2px 2px 0 0;min-height:2px;transition:height .4s}
+.tbarl{font-size:7px;color:var(--mu);margin-top:2px;writing-mode:vertical-rl;transform:rotate(180deg);height:22px;overflow:hidden}
+.hchart{display:flex;align-items:flex-end;gap:1px;height:60px}
+.hbar{display:flex;flex-direction:column;align-items:center;flex:1}
+.hbarv{flex:1;display:flex;align-items:flex-end;width:100%}
+.hbarb{width:100%;border-radius:1px 1px 0 0;min-height:1px}
+.hbarl{font-size:7px;color:var(--mu);margin-top:2px}
+
+/* SPEED TAB */
+.spf{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
+.spb{background:var(--s2);border:1px solid var(--bd);border-radius:6px;padding:4px 10px;font-size:10px;color:var(--m2);cursor:pointer;transition:all .18s;font-family:'DM Sans',sans-serif}
+.spb:hover,.spb.ac{background:var(--ac);border-color:var(--ac);color:#fff}
+.spc{background:var(--s2);border:1px solid var(--bd);border-radius:9px;padding:14px;margin-bottom:10px}
+.sph{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px;margin-bottom:12px}
+.spk{background:var(--s3);border-radius:8px;padding:10px 12px;text-align:center}
+.spkl{font-size:8px;color:var(--mu);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.spkv{font-family:'Bebas Neue',sans-serif;font-size:22px;line-height:1}
+.r7{display:flex;align-items:flex-end;gap:3px;height:60px;margin-top:10px}
+.r7bar{display:flex;flex-direction:column;align-items:center;flex:1}
+.r7bv{flex:1;display:flex;align-items:flex-end;width:100%}
+.r7bb{width:100%;border-radius:2px 2px 0 0;min-height:2px;background:var(--ac)}
+.r7bl{font-size:7px;color:var(--mu);margin-top:2px;text-align:center;overflow:hidden}
+
+/* SEARCH */
+.sw{position:relative;margin-bottom:10px}
+.sw input{width:100%;background:var(--s2);border:1px solid var(--b2);border-radius:8px;padding:8px 12px 8px 32px;font-size:12px;color:var(--tx);font-family:'DM Sans',sans-serif;outline:none}
+.sw input:focus{border-color:var(--ac)}
+.si{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--mu);font-size:13px}
+.rc{background:var(--s2);border:1px solid var(--gr);border-radius:8px;padding:10px;margin-bottom:6px;animation:fi .18s ease}
+.rr{display:flex;gap:4px;margin-bottom:3px;font-size:10px}
+.rk{color:var(--mu);min-width:60px;font-size:9px;font-weight:600}
+.nr{text-align:center;padding:30px;color:var(--mu);font-size:11px}
+
+/* COLOR UTILS */
+.up{color:var(--gr)}.dn{color:var(--rd)}
+.ca{color:var(--ac)}.cg{color:var(--gr)}.cy{color:var(--ye)}.cp{color:var(--pk)}.cr{color:var(--rd)}.cm{color:var(--mu)}.co{color:var(--or)}
+</style>
+</head><body>
+
+<!-- LOADER -->
+<div id="ld">
+  <div class="ll" style="font-size:32px;letter-spacing:2px">BABYORGANO <span style="color:var(--ac)">WAREHOUSE</span></div>
+  <div class="ls" id="lstatus">Packing Productivity · Connecting...</div>
+  <div class="lb"><div class="lf" id="lpbar"></div></div>
+  <div id="lerr" style="display:none">
+    <div class="lerr" id="lerrm"></div>
+    <button class="lret" onclick="loadData(true)">↺ Retry</button>
+  </div>
+</div>
+
+<!-- TOPBAR -->
+<div id="topbar">
+  <div class="logo" style="font-size:13px;letter-spacing:2px">BABY<span>ORGANO</span> <span style="color:var(--mu);font-size:10px;letter-spacing:1px">WAREHOUSE</span></div>
+  <div class="tr">
+    <span class="cache-tag" id="cacheTag" style="display:none">⚡ Cached</span>
+    <div class="chip"><div class="dot" id="dotEl"></div><span id="upd">Loading...</span></div>
+    <button class="rb" id="refBtn" onclick="loadData(true)">↺ Refresh</button>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div id="mn">
+
+  <!-- OVERVIEW -->
+  <div class="tp active" id="tp-ov">
+    <div class="tff" id="tff-ov"></div>
+    <div class="kg" id="koi"></div>
+    <div class="g2" style="margin-bottom:9px">
+      <div class="cd"><div class="ct">📈 Last 30 Days</div><div class="tchart" id="tchart"></div></div>
+      <div class="cd"><div class="ct">⏰ Peak Hours</div><div class="hchart" id="hchart"></div></div>
+    </div>
+    <div class="g2" style="margin-bottom:9px">
+      <div class="cd"><div class="ct">Top Packers</div><div class="bl" id="bpk"></div></div>
+      <div class="cd"><div class="ct">Panels</div><div class="bl" id="bpl"></div></div>
+    </div>
+    <div class="sc"><div class="sh"><div class="st">Recent Orders</div><div class="sl"></div></div>
+      <div class="tw"><table><thead id="th-rc"></thead><tbody id="tb-rc"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- PACKERS -->
+  <div class="tp" id="tp-pk">
+    <div class="tff" id="tff-pk"></div>
+    <div class="kg" id="kpk"></div>
+    <div class="sc"><div class="sh"><div class="st">All Packers</div><div class="sl"></div></div><div class="pg" id="pgrid"></div></div>
+    <div class="sc"><div class="sh"><div class="st">Leaderboard</div><div class="sl"></div></div>
+      <div class="tw"><table><thead id="th-pk"></thead><tbody id="tb-pk"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- SPEED -->
+  <div class="tp" id="tp-sp">
+    <div class="sh"><div class="st">⚡ Packer Speed & Activity</div><div class="sl"></div></div>
+    <div class="spf" id="spf"></div>
+    <div id="spc"><div class="nr">Upar se packer select karo</div></div>
+  </div>
+
+  <!-- MONTHLY -->
+  <div class="tp" id="tp-mo">
+    <div class="kg" id="kmo"></div>
+    <div class="sc"><div class="sh"><div class="st">Monthly Summary</div><div class="sl"></div></div>
+      <div class="tw"><table><thead id="th-mo"></thead><tbody id="tb-mo"></tbody></table></div>
+    </div>
+    <div class="sc"><div class="sh"><div class="st">Packer × Month Heatmap</div><div class="sl"></div></div>
+      <div class="hw"><table class="ht" id="heat"></table></div>
+    </div>
+  </div>
+
+  <!-- PANELS -->
+  <div class="tp" id="tp-pl">
+    <div class="kg" id="kpl"></div>
+    <div class="sc"><div class="sh"><div class="st">Panel Summary</div><div class="sl"></div></div>
+      <div class="tw"><table><thead id="th-pl"></thead><tbody id="tb-pl"></tbody></table></div>
+    </div>
+    <div class="sc"><div class="sh"><div class="st">Panel × Month</div><div class="sl"></div></div>
+      <div class="hw"><table class="ht" id="plh"></table></div>
+    </div>
+  </div>
+
+  <!-- SEARCH -->
+  <div class="tp" id="tp-sr">
+    <div class="sw"><div class="si">🔍</div><input type="text" id="srch" placeholder="Order ID, Packer, Panel, Phone..." oninput="doSearch(this.value)"/></div>
+    <div id="sout"><div class="nr">Type karo — Order ID + Date + Time milega ⚡</div></div>
+  </div>
+
+</div>
+
+<!-- BOTTOM TABS -->
+<div id="bts">
+  <button class="tbtn active" onclick="sw('ov',this)"><div class="ic">📊</div><span>Overview</span></button>
+  <button class="tbtn" onclick="sw('pk',this)"><div class="ic">👤</div><span>Packers</span></button>
+  <button class="tbtn" onclick="sw('sp',this)"><div class="ic">⚡</div><span>Speed</span></button>
+  <button class="tbtn" onclick="sw('mo',this)"><div class="ic">📅</div><span>Monthly</span></button>
+  <button class="tbtn" onclick="sw('pl',this)"><div class="ic">📱</div><span>Panels</span></button>
+  <button class="tbtn" onclick="sw('sr',this)"><div class="ic">🔍</div><span>Search</span></button>
+</div>
+
+<script>
+var API = 'https://script.google.com/macros/s/AKfycbzrj86GwpDubcmTOM5jLpDeypUZROL-Hg2PKad1jQlX8Al_5AKv80afy-aPJsmWVOVQEQ/exec';
+var CACHE_KEY = 'packpro_cache';
+var CACHE_TS_KEY = 'packpro_cache_ts';
+var CACHE_TTL = 5 * 60 * 1000; // 5 minutes cache
+var D = null;
+var CUR_FILTER = 'all'; // current time filter
+var PAL = ['#3b82f6','#10b981','#f59e0b','#a855f7','#f97316','#06b6d4','#ef4444','#84cc16','#ec4899','#14b8a6'];
+var MN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+var FILTERS = [
+  {k:'today', l:'Today'},
+  {k:'week',  l:'This Week'},
+  {k:'month', l:'This Month'},
+  {k:'3m',    l:'3 Months'},
+  {k:'6m',    l:'6 Months'},
+  {k:'all',   l:'All Time'},
+];
+
+// ── PROGRESS BAR ─────────────────────────────────────────────
+function setProgress(pct, status) {
+  document.getElementById('lpbar').style.width = pct + '%';
+  if (status) document.getElementById('lstatus').textContent = status;
+}
+
+// ── CACHE ─────────────────────────────────────────────────────
+function saveCache(data) {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+    localStorage.setItem(CACHE_TS_KEY, Date.now());
+  } catch(e) {}
+}
+function loadCache() {
+  try {
+    var ts = parseInt(localStorage.getItem(CACHE_TS_KEY) || '0');
+    if (Date.now() - ts < CACHE_TTL) {
+      var d = localStorage.getItem(CACHE_KEY);
+      return d ? JSON.parse(d) : null;
+    }
+  } catch(e) {}
+  return null;
+}
+function clearCache() {
+  try { localStorage.removeItem(CACHE_KEY); localStorage.removeItem(CACHE_TS_KEY); } catch(e) {}
+}
+
+// ── LOAD DATA ────────────────────────────────────────────────
+function loadData(forceRefresh) {
+  var btn = document.getElementById('refBtn');
+  btn.disabled = true;
+
+  // Try cache first (instant load)
+  if (!forceRefresh) {
+    var cached = loadCache();
+    if (cached) {
+      D = cached;
+      onDataReady(true);
+      // Silently refresh in background
+      fetchFresh(true);
+      return;
+    }
+  }
+
+  // Show loader for fresh fetch
+  var ld = document.getElementById('ld');
+  ld.classList.remove('hide');
+  document.getElementById('lerr').style.display = 'none';
+  document.getElementById('dotEl').classList.remove('red');
+  setProgress(10, 'Connecting to Google Sheets...');
+  fetchFresh(false);
+}
+
+function fetchFresh(silent) {
+  setProgress(30, 'Fetching data...');
+
+  // Fetch with timeout
+  var controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  var timer = controller ? setTimeout(function(){ controller.abort(); }, 25000) : null;
+
+  var opts = controller ? { signal: controller.signal } : {};
+
+  fetch(API + '?t=' + Date.now(), opts)
+    .then(function(r) {
+      clearTimeout(timer);
+      setProgress(70, 'Processing...');
+      return r.json();
+    })
+    .then(function(raw) {
+      if (!raw || raw.error) throw new Error(raw && raw.error ? raw.error : 'Bad response');
+      setProgress(95, 'Rendering...');
+      saveCache(raw);
+      D = raw;
+      onDataReady(false);
+    })
+    .catch(function(e) {
+      clearTimeout(timer);
+      if (silent) {
+        // Background refresh failed silently — keep showing cached data
+        document.getElementById('refBtn').disabled = false;
+        return;
+      }
+      // Show error
+      document.getElementById('dotEl').classList.add('red');
+      document.getElementById('lerrm').textContent = '⚠️ ' + (e.name === 'AbortError' ? 'Timeout — Apps Script slow hai. Retry karo.' : e.message);
+      document.getElementById('lerr').style.display = 'block';
+      document.getElementById('refBtn').disabled = false;
+    });
+}
+
+function onDataReady(fromCache) {
+  setProgress(100);
+  var now = new Date();
+  document.getElementById('upd').textContent = now.toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  var ct = document.getElementById('cacheTag');
+  ct.style.display = fromCache ? 'inline' : 'none';
+
+  // Build all views
+  rAll();
+  buildSF();
+  buildFilters();
+
+  // Hide loader
+  setTimeout(function() {
+    document.getElementById('ld').classList.add('hide');
+    document.getElementById('refBtn').disabled = false;
+  }, fromCache ? 0 : 300);
+}
+
+// ── TAB SWITCH ───────────────────────────────────────────────
+function sw(n, b) {
+  document.querySelectorAll('.tp').forEach(function(p){ p.classList.remove('active'); });
+  document.querySelectorAll('.tbtn').forEach(function(x){ x.classList.remove('active'); });
+  document.getElementById('tp-'+n).classList.add('active');
+  b.classList.add('active');
+}
+
+// ── TIME FILTERS ─────────────────────────────────────────────
+function buildFilters() {
+  ['ov','pk'].forEach(function(tab) {
+    document.getElementById('tff-'+tab).innerHTML =
+      '<span class="tfl">Filter:</span>' +
+      FILTERS.map(function(f) {
+        return '<button class="tfb'+(f.k===CUR_FILTER?' ac':'')+'" onclick="setFilter(\''+f.k+'\')">'+f.l+'</button>';
+      }).join('');
+  });
+}
+
+function setFilter(k) {
+  CUR_FILTER = k;
+  buildFilters();
+  rAll();
+}
+
+// Get filtered data based on current time range
+function getFiltered() {
+  if (!D) return D;
+  if (CUR_FILTER === 'all') return D;
+
+  var now = new Date();
+  var cutoff;
+  if (CUR_FILTER === 'today') {
+    cutoff = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  } else if (CUR_FILTER === 'week') {
+    cutoff = new Date(now - 7*24*3600*1000);
+  } else if (CUR_FILTER === 'month') {
+    cutoff = new Date(now.getFullYear(), now.getMonth(), 1);
+  } else if (CUR_FILTER === '3m') {
+    cutoff = new Date(now - 90*24*3600*1000);
+  } else if (CUR_FILTER === '6m') {
+    cutoff = new Date(now - 180*24*3600*1000);
+  }
+
+  // Filter rec
+  var rec = (D.rec || []).filter(function(r) {
+    return parseDateStr(r.d) >= cutoff;
+  });
+
+  // Filter L30
+  var L30 = (D.L30 || []).filter(function(x) {
+    return parseDateStr(x.d) >= cutoff;
+  });
+
+  // Rebuild PM from rec (packer map)
+  var PM = {};
+  rec.forEach(function(r) {
+    if (!PM[r.pk]) PM[r.pk] = { t: 0, pl: {} };
+    PM[r.pk].t++;
+    PM[r.pk].pl[r.pl] = (PM[r.pk].pl[r.pl] || 0) + 1;
+  });
+
+  // Rebuild PL (panel map)
+  var PL = {};
+  rec.forEach(function(r) {
+    if (!PL[r.pl]) PL[r.pl] = { t: 0, mo: {} };
+    PL[r.pl].t++;
+    var mo = moKey(r.d);
+    PL[r.pl].mo[mo] = (PL[r.pl].mo[mo] || 0) + 1;
+  });
+
+  var tot = rec.length;
+  var tc = (D.tod ? rec.filter(function(r){ return r.d === D.tod.slice(0,10); }).length : D.tc);
+
+  // Rebuild HM
+  var HM = {};
+  rec.forEach(function(r) {
+    if (r.t) { var h = parseInt(r.t.split(':')[0]); HM[h] = (HM[h]||0)+1; }
+  });
+
+  return { tot:tot, tc:tc, mc:tot, mom:D.mom, PM:PM, PL:PL, MM:D.MM, L30:L30, rec:rec.slice(-50), HM:HM, BS:D.BS, tod:D.tod };
+}
+
+function parseDateStr(s) {
+  if (!s) return new Date(0);
+  var p = s.split('/');
+  if (p.length === 3) return new Date(p[2], p[1]-1, p[0]);
+  return new Date(s);
+}
+function moKey(d) {
+  var p = parseDateStr(d);
+  return MN[p.getMonth()] + ' ' + p.getFullYear();
+}
+function mkSort(s){ var p=s.split(' '); return(p[1]||'0000')+'-'+String(MN.indexOf(p[0])+1).padStart(2,'0'); }
+
+// ── RENDER ALL ───────────────────────────────────────────────
+function rAll() { rOV(); rPK(); rMO(); rPL(); }
+
+function rOV() {
+  var FD = getFiltered();
+  if (!FD) return;
+  var t=FD.tot, tc=FD.tc||0, mc=FD.mc||0, pk=Object.keys(FD.PM||{}).length;
+  var mt=FD.mom!==null?(parseFloat(FD.mom)>0?'▲ +'+FD.mom+'%':'▼ '+FD.mom+'%'):'—';
+  var mc2=parseFloat(FD.mom)>0?'cg':'cr';
+  var tcLabel = CUR_FILTER==='today'?'Today\'s':CUR_FILTER==='all'?'Today\'s':'Period';
+  var mcLabel = CUR_FILTER==='month'?'This Month':CUR_FILTER==='all'?'This Month':'Period Total';
+  kpis('koi',[
+    {l:'Total Orders', v:t.toLocaleString(), c:'var(--ac)', s:''},
+    {l:tcLabel, v:tc.toLocaleString(), c:'var(--gr)', s:''},
+    {l:mcLabel, v:mc.toLocaleString(), c:'var(--ye)', s:'<span class="'+mc2+'">'+mt+'</span>'},
+    {l:'Packers', v:pk, c:'var(--pk)', s:''}
+  ]);
+
+  // Trend chart
+  var L30 = FD.L30||[];
+  var mx = Math.max.apply(null, L30.map(function(x){return x.c;}).concat([1]));
+  document.getElementById('tchart').innerHTML = L30.length ? L30.map(function(x,i){
+    var h = Math.max(3, Math.round(x.c/mx*64));
+    var isT = FD.tod && x.d === FD.tod.slice(5);
+    return '<div class="tbar" title="'+x.d+': '+x.c+'"><div class="tbarv"><div class="tbarb" style="height:'+h+'px;background:'+(isT?'var(--ye)':'var(--ac)')+'55;border-top:1px solid '+(isT?'var(--ye)':'var(--ac)')+'"></div></div><div class="tbarl">'+(i%5===0?x.d:'')+'</div></div>';
+  }).join('') : '<div class="nr" style="padding:10px;font-size:9px">No data</div>';
+
+  // Hour chart
+  var HM = FD.HM||{};
+  var mxh = Math.max.apply(null, Object.values(HM).concat([1]));
+  var hh='';
+  for(var h=0;h<24;h++){
+    var v=HM[h]||0, hp=Math.max(1,Math.round(v/mxh*54));
+    var col=h>=9&&h<=18?'var(--gr)':h>=6?'var(--ac)':'var(--mu)';
+    hh+='<div class="hbar" title="'+h+':00 — '+v+'"><div class="hbarv"><div class="hbarb" style="height:'+hp+'px;background:'+col+'88;border-top:1px solid '+col+'"></div></div><div class="hbarl">'+(h%6===0?h:'')+'</div></div>';
+  }
+  document.getElementById('hchart').innerHTML = hh;
+
+  // Bars
+  var pa = Object.entries(FD.PM||{}).sort(function(a,b){return b[1].t-a[1].t;}).slice(0,10);
+  brs('bpk', pa.map(function(e){return[e[0],e[1].t];}), t, PAL[0]);
+  var pla = Object.entries(FD.PL||{}).sort(function(a,b){return b[1].t-a[1].t;});
+  brs('bpl', pla.map(function(e){return[e[0],e[1].t];}), t, PAL[3]);
+
+  // Recent
+  var rec = FD.rec||[];
+  tbl('th-rc','tb-rc',['Date','Time','Packer','Panel','Order ID','Phone'],
+    rec.slice().reverse().slice(0,30).map(function(r){
+      return[[r.d,'mn ca'],[r.t||'—','mn cm'],[r.pk,'cy'],[r.pl,'cp'],[r.oid||'—','mn'],[r.ph||'—','mn cm']];
+    }));
+}
+
+function rPK() {
+  var FD = getFiltered();
+  if (!FD) return;
+  var pa = Object.entries(FD.PM||{}).sort(function(a,b){return b[1].t-a[1].t;});
+  var t = FD.tot, avg = t/Math.max(pa.length,1);
+  kpis('kpk',[
+    {l:'Total',v:t.toLocaleString(),c:'var(--ac)',s:''},
+    {l:'Packers',v:pa.length,c:'var(--gr)',s:''},
+    {l:'Top',v:(pa[0]&&pa[0][0])||'—',c:'var(--ye)',s:''},
+    {l:'Top Count',v:(pa[0]&&pa[0][1].t)||0,c:'var(--pk)',s:''}
+  ]);
+  document.getElementById('pgrid').innerHTML = pa.map(function(e,i){
+    var nm=e[0], cnt=e[1].t, col=PAL[i%PAL.length];
+    var pct = pa[0][1].t>0?Math.round(cnt/pa[0][1].t*100):0;
+    var sh = t>0?(cnt/t*100).toFixed(1):'0';
+    var md = i===0?'🥇':i===1?'🥈':i===2?'🥉':nm.charAt(0).toUpperCase();
+    return '<div class="pc" onclick="openSpd(\''+nm.replace(/'/g,"\\'")+'\')" ><div class="pav" style="background:'+col+'22;color:'+col+'">'+md+'</div><div class="pn" title="'+nm+'">'+nm+'</div><div class="pnum">'+cnt+'</div><div class="ppc">'+sh+'% • tap for speed</div><div class="pb"><div class="pbf" style="width:'+pct+'%;background:'+col+'"></div></div></div>';
+  }).join('');
+  tbl('th-pk','tb-pk',['#','Packer','Orders','Share','Top Panel','Avg/Day','Perf'],
+    pa.map(function(e,i){
+      var nm=e[0], cnt=e[1].t, ab=cnt>=avg, tp=top(e[1].pl);
+      var bs=D.BS&&D.BS[nm];
+      var apd=bs?bs.avg:'—';
+      return[[(i===0?'🥇':i===1?'🥈':i===2?'🥉':'')+(i+1),'mn cm'],[nm,'cy'],[cnt.toLocaleString(),'mn cg'],[t>0?(cnt/t*100).toFixed(1):0+'%',''],[tp,'cp'],[apd,'mn ca'],[ab?'⭐ Above':'📉 Below',ab?'cg':'cr']];
+    }));
+}
+
+function buildSF() {
+  var pks = Object.keys(D.PM||{}).sort();
+  document.getElementById('spf').innerHTML = pks.map(function(pk){
+    return '<button class="spb" onclick="showSpd(\''+pk.replace(/'/g,"\\'")+'\',this)">'+pk+'</button>';
+  }).join('');
+  if (pks.length) { var f=document.querySelector('.spb'); if(f){f.classList.add('ac'); showSpd(pks[0],f);} }
+}
+
+function openSpd(nm) {
+  sw('sp', document.querySelectorAll('.tbtn')[2]);
+  document.querySelectorAll('.spb').forEach(function(b){
+    if(b.textContent===nm){b.classList.add('ac'); showSpd(nm,b);}
+    else b.classList.remove('ac');
+  });
+}
+
+function showSpd(pk, btn) {
+  document.querySelectorAll('.spb').forEach(function(b){b.classList.remove('ac');});
+  btn.classList.add('ac');
+  var bs = D.BS&&D.BS[pk];
+  if (!bs) { document.getElementById('spc').innerHTML='<div class="nr">Data nahi</div>'; return; }
+  var pi = Object.keys(D.PM||{}).sort().indexOf(pk), col=PAL[pi%PAL.length];
+  var h = '<div class="spc">';
+  h += '<div style="font-size:12px;font-weight:600;color:'+col+';margin-bottom:10px">'+pk+'</div>';
+  h += '<div class="sph">';
+  h += '<div class="spk"><div class="spkl">Total Orders</div><div class="spkv" style="color:'+col+'">'+bs.tot.toLocaleString()+'</div></div>';
+  h += '<div class="spk"><div class="spkl">Active Days</div><div class="spkv" style="color:var(--ye)">'+bs.days+'</div></div>';
+  h += '<div class="spk"><div class="spkl">Avg / Day</div><div class="spkv" style="color:var(--gr)">'+bs.avg+'</div></div>';
+  h += '<div class="spk"><div class="spkl">Best Day Count</div><div class="spkv" style="color:var(--or)">'+bs.bestC+'</div></div>';
+  h += '<div class="spk"><div class="spkl">~30-Order Batches</div><div class="spkv" style="color:var(--pk)">'+bs.b30+'</div></div>';
+  h += '<div class="spk"><div class="spkl">Best Day</div><div class="spkv" style="color:var(--cy);font-size:14px">'+bs.best+'</div></div>';
+  h += '</div>';
+  if (bs.r7&&bs.r7.length) {
+    var mx7 = Math.max.apply(null, bs.r7.map(function(x){return x.c;}))||1;
+    h += '<div style="font-size:9px;color:var(--mu);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Last 7 Active Days</div>';
+    h += '<div class="r7">';
+    bs.r7.forEach(function(x){
+      var hp = Math.max(3, Math.round(x.c/mx7*54));
+      var isT = x.d === D.tod;
+      h += '<div class="r7bar" title="'+x.d+': '+x.c+' orders"><div class="r7bv"><div class="r7bb" style="height:'+hp+'px;background:'+(isT?'var(--ye)':col)+'"></div></div><div class="r7bl">'+x.d.slice(5)+'<br/>'+x.c+'</div></div>';
+    });
+    h += '</div>';
+  }
+  h += '</div>';
+  document.getElementById('spc').innerHTML = h;
+}
+
+function rMO() {
+  var mm = D.MM||{};
+  var ms = Object.keys(mm).filter(function(k){return k!=='?';}).sort(function(a,b){return mkSort(a).localeCompare(mkSort(b));});
+  var best = ms.length?ms.reduce(function(a,b){return mm[a].t>mm[b].t?a:b;}):'';
+  var mt = D.mom!==null?(parseFloat(D.mom)>0?'▲ +'+D.mom+'%':'▼ '+D.mom+'%'):'N/A';
+  kpis('kmo',[{l:'Months',v:ms.length,c:'var(--ac)',s:''},{l:'Total',v:D.tot.toLocaleString(),c:'var(--gr)',s:''},{l:'Best Month',v:best||'—',c:'var(--ye)',s:''},{l:'MoM Growth',v:mt,c:parseFloat(D.mom)>0?'var(--gr)':'var(--rd)',s:''}]);
+  tbl('th-mo','tb-mo',['Month','Orders','Top Packer','Top Panel','Trend'],
+    ms.map(function(m,i){
+      var md=mm[m], pv=i>0?mm[ms[i-1]].t:md.t, df=md.t-pv;
+      var tr=df>0?'<span class="up">▲ +'+df+'</span>':df<0?'<span class="dn">▼ '+df+'</span>':'<span style="color:var(--mu)">→</span>';
+      return[[m,'cy'],[md.t.toLocaleString(),'mn cg'],[top(md.pk),'ca'],[top(md.pl),'cp'],[tr,'html']];
+    }));
+  var pks = Object.keys(D.PM||{}).sort(), mv=1;
+  pks.forEach(function(p){ ms.forEach(function(m){ var v=mm[m].pk&&mm[m].pk[p]||0; if(v>mv)mv=v; }); });
+  var h='<thead><tr><th>Packer</th>'+ms.map(function(m){return'<th>'+m+'</th>';}).join('')+'<th>Total</th></tr></thead><tbody>';
+  pks.forEach(function(p){
+    var rt = ms.reduce(function(s,m){return s+((mm[m].pk&&mm[m].pk[p])||0);},0);
+    h+='<tr><td class="rh">'+p+'</td>'+ms.map(function(m){var v=(mm[m].pk&&mm[m].pk[p])||0;return'<td class="'+hc(v,mv)+'">'+(v||'—')+'</td>';}).join('')+'<td style="color:var(--ac);font-weight:600">'+rt+'</td></tr>';
+  });
+  h+='<tr><td class="rh" style="color:var(--cy)">TOTAL</td>'+ms.map(function(m){return'<td style="color:var(--cy)">'+mm[m].t+'</td>';}).join('')+'<td style="color:var(--cy)">'+D.tot+'</td></tr></tbody>';
+  document.getElementById('heat').innerHTML = h;
+}
+
+function rPL() {
+  var pm = D.PL||{};
+  var panels = Object.entries(pm).sort(function(a,b){return b[1].t-a[1].t;});
+  var ms = Object.keys(D.MM||{}).filter(function(k){return k!=='?';}).sort(function(a,b){return mkSort(a).localeCompare(mkSort(b));});
+  var t = D.tot;
+  kpis('kpl',[{l:'Panels',v:panels.length,c:'var(--ac)',s:''},{l:'Total',v:t.toLocaleString(),c:'var(--gr)',s:''},{l:'Top Panel',v:(panels[0]&&panels[0][0])||'—',c:'var(--pk)',s:''},{l:'Top Count',v:(panels[0]&&panels[0][1].t)||0,c:'var(--or)',s:''}]);
+  tbl('th-pl','tb-pl',['Panel','Orders','Share','Best Month'],
+    panels.map(function(e){return[[e[0],'cp'],[e[1].t.toLocaleString(),'mn cg'],[t>0?(e[1].t/t*100).toFixed(1):0+'%',''],[top(e[1].mo),'ca']];}));
+  var mv=1;
+  panels.forEach(function(e){ ms.forEach(function(m){ var v=e[1].mo&&e[1].mo[m]||0; if(v>mv)mv=v; }); });
+  var h='<thead><tr><th>Panel</th>'+ms.map(function(m){return'<th>'+m+'</th>';}).join('')+'<th>Total</th></tr></thead><tbody>';
+  panels.forEach(function(e){
+    h+='<tr><td class="rh" style="color:var(--pk)">'+e[0]+'</td>'+ms.map(function(m){var v=e[1].mo&&e[1].mo[m]||0;return'<td class="'+hc(v,mv)+'">'+(v||'—')+'</td>';}).join('')+'<td style="color:var(--ac);font-weight:600">'+e[1].t+'</td></tr>';
+  });
+  h+='<tr><td class="rh" style="color:var(--cy)">TOTAL</td>'+ms.map(function(m){return'<td style="color:var(--cy)">'+(D.MM&&D.MM[m]?D.MM[m].t:0)+'</td>';}).join('')+'<td style="color:var(--cy)">'+t+'</td></tr></tbody>';
+  document.getElementById('plh').innerHTML = h;
+}
+
+function doSearch(q) {
+  var out = document.getElementById('sout');
+  if (!q || q.length < 2) { out.innerHTML='<div class="nr">2+ characters dalein...</div>'; return; }
+  if (!D) return;
+  var ql = q.toLowerCase(), res=[], ord=[];
+  Object.entries(D.PM||{}).forEach(function(e){
+    if(e[0].toLowerCase().indexOf(ql)>-1){
+      var bs=D.BS&&D.BS[e[0]];
+      res.push({type:'pk',name:e[0],t:e[1].t,tp:top(e[1].pl),bs:bs});
+    }
+  });
+  Object.entries(D.PL||{}).forEach(function(e){
+    if(e[0].toLowerCase().indexOf(ql)>-1) res.push({type:'pl',name:e[0],t:e[1].t,mo:e[1].mo});
+  });
+  (D.rec||[]).forEach(function(r){
+    if((r.oid&&r.oid.toLowerCase().indexOf(ql)>-1)||(r.ph&&r.ph.indexOf(ql)>-1)||(r.pk&&r.pk.toLowerCase().indexOf(ql)>-1)) ord.push(r);
+  });
+  if(!res.length&&!ord.length){ out.innerHTML='<div class="nr">❌ Koi result nahi: <b>'+q+'</b></div>'; return; }
+  var h = '<div style="font-size:9px;color:var(--mu);margin-bottom:7px">'+(res.length+ord.length)+' result(s)</div>';
+  ord.forEach(function(r){
+    h+='<div class="rc" style="border-color:var(--cy)">';
+    h+='<div class="rr"><span class="rk">🔖 Order</span><span class="ca mn" style="font-weight:700">'+(r.oid||'—')+'</span></div>';
+    h+='<div class="rr"><span class="rk">📅 Date</span><span class="mn">'+r.d+'</span></div>';
+    h+='<div class="rr"><span class="rk">🕐 Time</span><span class="mn cy">'+(r.t||'—')+'</span></div>';
+    h+='<div class="rr"><span class="rk">👤 Packer</span><span class="cy">'+r.pk+'</span></div>';
+    h+='<div class="rr"><span class="rk">📱 Panel</span><span class="cp">'+r.pl+'</span></div>';
+    h+='<div class="rr"><span class="rk">📞 Phone</span><span class="mn">'+(r.ph||'—')+'</span></div></div>';
+  });
+  res.forEach(function(r){
+    if(r.type==='pk'){
+      var bs=r.bs;
+      h+='<div class="rc"><div class="rr"><span class="rk">👤 Packer</span><span class="cy" style="font-weight:700">'+r.name+'</span></div>';
+      h+='<div class="rr"><span class="rk">📦 Orders</span><span class="ca mn">'+r.t.toLocaleString()+'</span></div>';
+      h+='<div class="rr"><span class="rk">📱 Top Panel</span><span class="cp">'+r.tp+'</span></div>';
+      if(bs){
+        h+='<div class="rr"><span class="rk">📅 Active Days</span><span class="cg mn">'+bs.days+'</span></div>';
+        h+='<div class="rr"><span class="rk">⚡ Avg/Day</span><span class="cy mn">'+bs.avg+'</span></div>';
+        h+='<div class="rr"><span class="rk">🏆 Best Day</span><span class="co mn">'+bs.best+' ('+bs.bestC+' orders)</span></div>';
+      }
+      h+='</div>';
+    } else {
+      h+='<div class="rc" style="border-color:var(--pk)"><div class="rr"><span class="rk">📱 Panel</span><span class="cp" style="font-weight:700">'+r.name+'</span></div><div class="rr"><span class="rk">📦 Orders</span><span class="ca mn">'+r.t.toLocaleString()+'</span></div><div class="rr"><span class="rk">📅 Best Month</span><span class="cy">'+top(r.mo)+'</span></div></div>';
+    }
+  });
+  out.innerHTML = h;
+}
+
+// ── UTILS ────────────────────────────────────────────────────
+function top(o){ var e=Object.entries(o||{}).sort(function(a,b){return b[1]-a[1];}); return e.length?e[0][0]:'—'; }
+function hc(v,mx){ if(!v||!mx)return'h0'; var r=v/mx; return r>=.75?'h4':r>=.5?'h3':r>=.25?'h2':'h1'; }
+function kpis(id,items){
+  document.getElementById(id).innerHTML = items.map(function(it){
+    return '<div class="kp"><div class="kg2" style="background:'+it.c+'"></div><div class="kl">'+it.l+'</div><div class="kv" style="color:'+it.c+'">'+it.v+'</div>'+(it.s?'<div class="ks">'+it.s+'</div>':'')+'</div>';
+  }).join('');
+}
+function brs(id,en,t,color){
+  var mx=(en[0]&&en[0][1])||1;
+  document.getElementById(id).innerHTML = en.map(function(e){
+    return '<div class="bi"><div class="bn" title="'+e[0]+'">'+e[0]+'</div><div class="bt"><div class="bf" style="width:'+Math.round(e[1]/mx*100)+'%;background:'+color+'"></div></div><div class="bnum">'+e[1]+'</div></div>';
+  }).join('');
+}
+function tbl(ti,bi,hd,rows){
+  document.getElementById(ti).innerHTML = '<tr>'+hd.map(function(h){return'<th>'+h+'</th>';}).join('')+'</tr>';
+  document.getElementById(bi).innerHTML = rows.map(function(cells){
+    return '<tr>'+cells.map(function(c){return'<td class="'+(c[1]==='html'?'':c[1]||'')+'">'+(c[1]==='html'?c[0]:(c[0]!=null?c[0]:'—'))+'</td>';}).join('')+'</tr>';
+  }).join('');
+}
+
+// ── START ────────────────────────────────────────────────────
+window.addEventListener('load', function(){ loadData(false); });
+</script>
+</body></html>
